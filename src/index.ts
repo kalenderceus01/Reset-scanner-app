@@ -1,7 +1,7 @@
-import authRoutes from "./routes/auth";
-import express from "express";
+import express, { Request, Response } from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import authRoutes from "./routes/auth";
 
 dotenv.config();
 
@@ -12,7 +12,7 @@ app.use(cors());
 app.use(express.json());
 
 // Test endpoint
-app.get("/", (req, res) => {
+app.get("/", (req: Request, res: Response) => {
   res.send("Reset Scanner API çalışıyor 🚀");
 });
 
