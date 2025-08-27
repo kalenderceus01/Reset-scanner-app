@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import authRoutes from "./routes/auth";
 
 dotenv.config();
 
@@ -10,12 +11,14 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
-// Basit test endpoint
+// Test endpoint
 app.get("/", (req, res) => {
   res.send("Reset Scanner API çalışıyor 🚀");
 });
 
-// Sunucuyu başlat
+// Auth routes
+app.use("/api/auth", authRoutes);
+
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
