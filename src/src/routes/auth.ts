@@ -1,57 +1,48 @@
 import { Router } from "express";
-import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { User } from "../types";
 
 const router = Router();
 
-// Geçici kullanıcı veritabanı (ileride gerçek DB olacak)
-const users: User[] = [];
+let users: User[] = [];
 
-// JWT Secret
-const JWT_SECRET = process.env.JWT_SECRET || "secret";
-
-// Kayıt endpoint
+// Kullanıcı kaydı
 router.post("/register", (req, res) => {
   const { email, password } = req.body;
 
   const existingUser = users.find((u) => u.email === email);
   if (existingUser) {
-    return res.status(400).json({ message: "Bu email zaten kayıtlı" });
+    return res.status(400).json({ message: "User already exists" });
   }
 
-  const hashedPassword = bcrypt.hashSync(password, 8);
   const newUser: User = {
-    id: users.length + 1,
+    id: Date.now().toString(),
     email,
-    password: hashedPassword,
+    password,
     role: "user",
     createdAt: new Date(),
   };
 
   users.push(newUser);
-  res.json({ message: "Kayıt başarılı", user: { email: newUser.email } });
+  res.status(201).json({ message: "User registered successfully" });
 });
 
-// Login endpoint
+// Kullanıcı girişi
 router.post("/login", (req, res) => {
   const { email, password } = req.body;
 
-  const user = users.find((u) => u.email === email);
+  const user = users.find((u) => u.email === email && u.password === password);
   if (!user) {
-    return res.status(400).json({ message: "Kullanıcı bulunamadı" });
+    return res.status(401).json({ message: "Invalid credentials" });
   }
 
-  const isPasswordValid = bcrypt.compareSync(password, user.password);
-  if (!isPasswordValid) {
-    return res.status(400).json({ message: "Hatalı şifre" });
-  }
+  const token = jwt.sign(
+    { id: user.id, email: user.email, role: user.role },
+    process.env.JWT_SECRET as string,
+    { expiresIn: "1h" }
+  );
 
-  const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, {
-    expiresIn: "1d",
-  });
-
-  res.json({ message: "Giriş başarılı", token });
+  res.json({ token });
 });
 
 export default router;
