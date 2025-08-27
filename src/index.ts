@@ -12,7 +12,7 @@ app.use(cors());
 app.use(express.json());
 
 // Test endpoint
-app.get("/", (req: Request, res: Response) => {
+app.get("/", (_req: Request, res: Response) => {
   res.send("Reset Scanner API çalışıyor 🚀");
 });
 
