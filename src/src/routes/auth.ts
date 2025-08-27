@@ -1,48 +1,50 @@
-import { Router } from "express";
-import jwt from "jsonwebtoken";
-import { User } from "../types";
+import { Router, Request, Response } from "express";
+import { Role, User } from "../types";
 
 const router = Router();
-
 let users: User[] = [];
 
-// Kullanıcı kaydı
-router.post("/register", (req, res) => {
-  const { email, password } = req.body;
+const normalizeEmail = (email: string) => email.trim().toLowerCase();
 
-  const existingUser = users.find((u) => u.email === email);
-  if (existingUser) {
-    return res.status(400).json({ message: "User already exists" });
+router.post("/register", (req: Request, res: Response) => {
+  const { email, password, role } = req.body as {
+    email?: string;
+    password?: string;
+    role?: Role;
+  };
+  if (!email || !password) {
+    return res.status(400).json({ error: "email and password required" });
   }
 
-  const newUser: User = {
-    id: Date.now().toString(),
-    email,
-    password,
-    role: "user",
-    createdAt: new Date(),
-  };
+  const e = normalizeEmail(email);
+  if (users.find((u) => u.email === e)) {
+    return res.status(409).json({ error: "already_registered" });
+  }
 
-  users.push(newUser);
-  res.status(201).json({ message: "User registered successfully" });
+  const user: User = {
+    id: (Date.now() + Math.random()).toString(36),
+    email: e,
+    password,
+    role: role || "user",
+    createdAt: new Date()
+  };
+  users.push(user);
+  return res.status(201).json({ id: user.id, email: user.email, role: user.role });
 });
 
-// Kullanıcı girişi
-router.post("/login", (req, res) => {
-  const { email, password } = req.body;
-
-  const user = users.find((u) => u.email === email && u.password === password);
-  if (!user) {
-    return res.status(401).json({ message: "Invalid credentials" });
+router.post("/login", (req: Request, res: Response) => {
+  const { email, password } = req.body as { email?: string; password?: string };
+  if (!email || !password) {
+    return res.status(400).json({ error: "email and password required" });
   }
 
-  const token = jwt.sign(
-    { id: user.id, email: user.email, role: user.role },
-    process.env.JWT_SECRET as string,
-    { expiresIn: "1h" }
-  );
+  const e = normalizeEmail(email);
+  const user = users.find((u) => u.email === e && u.password === password);
+  if (!user) {
+    return res.status(401).json({ error: "invalid_credentials" });
+  }
 
-  res.json({ token });
+  return res.json({ id: user.id, email: user.email, role: user.role });
 });
 
 export default router;
