@@ -1,4 +1,4 @@
-export type Role = 'free' | 'premium' | 'familyAdmin';
+export type Role = 'user' | 'premium' | 'familyAdmin';
 
 export interface User {
   id: string;
@@ -17,5 +17,4 @@ declare global {
   }
 }
 
-// Dosyayı bir module yapmak için:
 export {};
